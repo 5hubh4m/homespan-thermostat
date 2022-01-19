@@ -25,28 +25,32 @@ and connected the relay to the R and W wires in my heating panel in the `NO` mod
 
 Use the Arduino IDE to flash the code to the microcontroller.
 
-## Configuring
+## Configuration and Usage
 
-There are a few parameters that can be configured.
+There are a few parameters that need to be configured.
 
-The Wi-Fi credentials can be defined in the source code or can be set using
-the `W` command of the
-[HomeSpan CLI](https://github.com/HomeSpan/HomeSpan/blob/master/docs/CLI.md).
-
-The HomeKit pairing code can be defined in the source code. Otherwise the
-default code `466-37-726` is used or it can be set using the `S` command of the
-[HomeSpan CLI](https://github.com/HomeSpan/HomeSpan/blob/master/docs/CLI.md).
-
-The HomeKit QR Setup ID can be defined in the source code. Otherwise the
-default QR Setup ID `HSPN` is used or it can be set using the `Q` command of the
-[HomeSpan CLI](https://github.com/HomeSpan/HomeSpan/blob/master/docs/CLI.md).
-
-## Using
+* The Wi-Fi credentials can be defined in the source code as the macros `WIFI_SSDI`
+  and `WIFI_PASSWORD` or can be set using the `W` command of the
+  [HomeSpan CLI](https://github.com/HomeSpan/HomeSpan/blob/master/docs/CLI.md).
+* The HomeKit pairing code can be defined in the source code as the macro `HOMEKIT_PAIRING_CODE`.
+  Otherwise the default code `466-37-726` is used or it can be set using the `S` command of the
+  [HomeSpan CLI](https://github.com/HomeSpan/HomeSpan/blob/master/docs/CLI.md).
+* The HomeKit QR Setup ID can be defined in the source code as the macro `HOMEKIT_PAIRING_QR_ID`.
+  Otherwise the default QR Setup ID `HSPN` is used or it can be set using the `Q` command of the
+  [HomeSpan CLI](https://github.com/HomeSpan/HomeSpan/blob/master/docs/CLI.md).
 
 Pair the accessory to HomeKit. The general instructions are given
-[here](https://github.com/HomeSpan/HomeSpan/blob/master/docs/HomeSpanUserGuide.pdf).
+[here](https://github.com/HomeSpan/HomeSpan/blob/master/docs/HomeSpanUserGuide.pdf). That's pretty much it.
 
-That's pretty much it. If you're connected to HomeKit, you should be able to control your heater
-using Siri.
+For my particular heating setup, I have enabled two heating modes: _Heating_, and _Auto_. _Heating_ mode allows you to
+set a single _Target Temperature_ which the thermostat will try to maintain. However, depending on how well
+insulated your home is, and how cold it is outside, it can lead to the heater turning on and off frequently
+consuming a lot of energy. `Auto` mode fixes that by allowing you to set two temperatures, a _Heating Threshold_
+and a _Cooling Threshold_. In this mode, the thermostat will only turn on if the temperature reaches below the
+_Heating Threshold_, and will provide heat until the _Cooling Threshold_ is reached. This allows the heater to be
+on for a longer period of time, but also be turned off for a longer periods of time, which is more energy efficnent
+then being turned on in bursts.
+
+If you're connected to HomeKit, you should be able to control your heater using Siri.
 
 ![This image shows how the this thermostat looks in the Home app.](assets/home.png "Home")
