@@ -1,14 +1,23 @@
 #include <HomeSpan.h>
 
-// define the constants for the thermostat before the includes
-// temperature sensor MUST be on ADC1 as ADC2 is occupied during Wi-Fi
+// define the constants for the thermostat
 #define NAME "Thermostat"
 #define MANUFACTURER "Shubham Chaudhary"
 #define MODEL "HomeSpan Thermostat"
 #define SERIAL_NUM "0x0000001"
 #define FIRMWARE "v1.0.0"
+
+// the pin on which the heater relay and
+// temperature sensor is connected
 #define HEATER_PIN 10
-#define TEMP_CHANNEL ADC1_CHANNEL_7
+#define TEMP_PIN 8
+
+// constraint the TEMP_PIN to be between 3 and 10
+// since we can only use ADC1 as ADC2 is occupied
+// during Wi-Fi usage
+#if TEMP_PIN < 3 || TEMP_PIN > 10
+#error "Temperature sensor MUST be on ADC1 as ADC2 is occupied during Wi-Fi."
+#endif
 
 // uncomment these lines to define your own custom parameters
 // #define WIFI_SSID "Your Wi-Fi SSID"
@@ -73,8 +82,8 @@ void setup() {
   // relay pin and in-built NeoPixel as a status LED
   thermostatService = new Thermostat(
     NAME,
+    TEMP_PIN,
     HEATER_PIN,
-    TEMP_CHANNEL,
     PIN_NEOPIXEL,
     NEOPIXEL_POWER
   );

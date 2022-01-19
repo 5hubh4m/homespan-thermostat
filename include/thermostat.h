@@ -33,13 +33,13 @@ public:
   // constructor for the thermostat
   Thermostat(
     const char* nameString,
+    int tempPin,
     int heaterPin,
-    adc1_channel_t tempChannel,
     int neopixelPin,
     int neopixelPowerPin
   ):
     heater(heaterPin),
-    tempSensor(tempChannel),
+    tempSensor(tempPin),
     status(neopixelPin, neopixelPowerPin)
   {
     // get an initial reading for the current temperature
@@ -96,7 +96,7 @@ public:
 
       // decide whether to changed the state of the heater
       // based on currently set config
-      bool toggle = false;
+      bool toggle;
       switch (targetState) {
         case 0:
           toggle = heaterState;
@@ -104,13 +104,13 @@ public:
         case 1:
           toggle = toggleHeaterState(currentTemp, targetTemp, targetTemp, heaterState);
           break;
-        case 3:
+        default:
           toggle = toggleHeaterState(currentTemp, minTemp, maxTemp, heaterState);
       }
 
       // decide the status color of the LED
       // based on currently set config
-      color_t color = PURPLE;
+      color_t color;
       switch (targetState) {
         case 0:
           color = PURPLE;
@@ -118,7 +118,7 @@ public:
         case 1:
           color = statusColor(currentTemp, targetTemp - 1, targetTemp + 1);
           break;
-        case 3:
+        default:
           color = statusColor(currentTemp, minTemp, maxTemp);
       }
 
