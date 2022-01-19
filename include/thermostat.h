@@ -38,13 +38,15 @@ public:
     int neopixelPin,
     int neopixelPowerPin
   ):
-    Service::Thermostat(),
     heater(heaterPin),
     tempSensor(tempChannel),
     status(neopixelPin, neopixelPowerPin)
   {
     // get an initial reading for the current temperature
     double currentTemp = tempSensor.readTemp() / 10.0;
+
+    // initialise the status to default
+    status.setColor(WHITE);
 
     // initialise the characteristics
     name = new Characteristic::Name(nameString);
@@ -73,7 +75,7 @@ public:
   }
 
   // update the state of the thermostat
-  virtual void loop() override {
+  void loop() {
     // update current temperature when you have enough readings
     if (tempReadings > 50) {
       double currentTemp = (tempSum / tempReadings) / 10.0;
@@ -84,34 +86,39 @@ public:
 
     // update state every 5 seconds
     if ((millis() - lastUpdateState) > 5000) {
-      // get the current state of the heater
+      // get the current state of the system
+      int targetState = targetHeaterState->getVal();
       bool heaterState = currentHeaterState->getVal();
-      double currentTemp = currentTemperature->getVal<double>(),
-             targetTemp = targetTemperature->getVal<double>(),
+      double targetTemp = targetTemperature->getVal<double>(),
+             currentTemp = currentTemperature->getVal<double>(),
              minTemp = heatingThresholdTemperature->getVal<double>(),
              maxTemp = coolingThresholdTemperature->getVal<double>();
 
       // decide whether to changed the state of the heater
       // based on currently set config
-      bool toggle;
-      switch (targetHeaterState->getVal()) {
+      bool toggle = false;
+      switch (targetState) {
         case 0:
           toggle = heaterState;
+          break;
         case 1:
           toggle = toggleHeaterState(currentTemp, targetTemp, targetTemp, heaterState);
-        default:
-          toggle = toggleHeaterState(currentTemp,minTemp, maxTemp, heaterState);
+          break;
+        case 3:
+          toggle = toggleHeaterState(currentTemp, minTemp, maxTemp, heaterState);
       }
 
       // decide the status color of the LED
       // based on currently set config
-      uint32_t color;
-      switch (targetHeaterState->getVal()) {
+      color_t color = PURPLE;
+      switch (targetState) {
         case 0:
           color = PURPLE;
+          break;
         case 1:
           color = statusColor(currentTemp, targetTemp - 1, targetTemp + 1);
-        default:
+          break;
+        case 3:
           color = statusColor(currentTemp, minTemp, maxTemp);
       }
 

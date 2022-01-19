@@ -8,7 +8,7 @@ typedef uint32_t color_t;
 #define BLUE Adafruit_NeoPixel::Color(0, 0, 255)
 #define GREEN Adafruit_NeoPixel::Color(0, 255, 0)
 #define WHITE Adafruit_NeoPixel::Color(255, 255, 255)
-#define PURPLE Adafruit_NeoPixel::Color(255, 0, 255)
+#define PURPLE Adafruit_NeoPixel::Color(128, 0, 128)
 
 // this class encapsulates the NeoPixel LED
 class NeoPixel {

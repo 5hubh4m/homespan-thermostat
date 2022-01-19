@@ -1,7 +1,8 @@
 #include <HomeSpan.h>
 
 // this class defines the identification service
-struct Identify: Service::AccessoryInformation {
+class Identify: public Service::AccessoryInformation {
+public:
   // constructor for the service
   Identify(
     const char* name,
@@ -9,7 +10,7 @@ struct Identify: Service::AccessoryInformation {
     const char* serialNumber,
     const char* model,
     const char* firmwareVersion
-  ): Service::AccessoryInformation() {
+  ) {
     new Characteristic::Name(name);
     new Characteristic::Manufacturer(manufacturer);
     new Characteristic::SerialNumber(serialNumber);
@@ -20,9 +21,10 @@ struct Identify: Service::AccessoryInformation {
 };
 
 // this class defines the protocol information
-struct ProtocolVersion: Service::HAPProtocolInformation {
+class ProtocolVersion: public Service::HAPProtocolInformation {
+public:
   // constructor for the service
-  ProtocolVersion(const char* version = "1.1.0"): Service::HAPProtocolInformation() {
+  ProtocolVersion(const char* version = "1.1.0") {
     new Characteristic::Version(version);
   }
 };
