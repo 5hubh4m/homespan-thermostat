@@ -1,16 +1,16 @@
 #include <HomeSpan.h>
 
 // define the constants for the thermostat
-#define NAME "Thermostat"
+#define NAME         "Thermostat"
 #define MANUFACTURER "Shubham Chaudhary"
-#define MODEL "HomeSpan Thermostat"
-#define SERIAL_NUM "0x0000001"
-#define FIRMWARE "v1.0.0"
+#define MODEL        "HomeSpan Thermostat"
+#define SERIAL_NUM   "0x0000001"
+#define FIRMWARE     "v1.0.0"
 
 // the pin on which the heater relay and
 // temperature sensor is connected
 #define HEATER_PIN 10
-#define TEMP_PIN 8
+#define TEMP_PIN   8
 
 // constraint the TEMP_PIN to be between 3 and 10
 // since we can only use ADC1 as ADC2 is occupied
@@ -20,10 +20,11 @@
 #endif
 
 // uncomment these lines to define your own custom parameters
-// #define WIFI_SSID "Your Wi-Fi SSID"
-// #define WIFI_PASSWORD "Your Wi-Fi Password"
-// #define HOMEKIT_PAIRING_CODE "8 Digit Pairing Code"
+// #define WIFI_SSID             "Your Wi-Fi SSID"
+// #define WIFI_PASSWORD         "Your Wi-Fi Password"
+// #define HOMEKIT_PAIRING_CODE  "8 Digit Pairing Code"
 // #define HOMEKIT_PAIRING_QR_ID "4 Digit Alphanumeric Code"
+// #define DEFAULT_OTA_PASSWORD  "Custom OTA Password"
 
 // include the custom classes
 #include "include/identify.h"

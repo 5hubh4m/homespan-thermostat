@@ -39,7 +39,7 @@ arduino-cli compile -b esp32:esp32:adafruit_feather_esp32s2 --port BOARD_IP --pr
 ```
 
 The latter will promt you for the OTA password. The default OTA password for HomeSpan is `homespan-ota`.
-It is recommended that you change it using the `O` command of the
+It is recommended that you change it in the source code (see below) or using the `O` command of the
 [HomeSpan CLI](https://github.com/HomeSpan/HomeSpan/blob/master/docs/CLI.md).
 
 ## Configuration and Usage
@@ -54,6 +54,9 @@ There are a few parameters that need to be configured.
   [HomeSpan CLI](https://github.com/HomeSpan/HomeSpan/blob/master/docs/CLI.md).
 * The HomeKit QR Setup ID can be defined in the source code as the macro `HOMEKIT_PAIRING_QR_ID`.
   Otherwise the default QR Setup ID `HSPN` is used or it can be set using the `Q` command of the
+  [HomeSpan CLI](https://github.com/HomeSpan/HomeSpan/blob/master/docs/CLI.md).
+* The OTA Password can be defined in the source code as the macro `DEFAULT_OTA_PASSWORD`.
+  Otherwise the default password `homespan-ota` is used or it can be set using the `O` command of the
   [HomeSpan CLI](https://github.com/HomeSpan/HomeSpan/blob/master/docs/CLI.md).
 
 Pair the accessory to HomeKit. The general instructions are given
