@@ -68,8 +68,8 @@ insulated your home is, and how cold it is outside, it can lead to the heater tu
 consuming a lot of energy. _Auto_ mode fixes that by allowing you to set two temperatures, a _Heating Threshold_
 and a _Cooling Threshold_. In this mode, the thermostat will only turn on if the temperature reaches below the
 _Heating Threshold_, and will provide heat until the _Cooling Threshold_ is reached. This allows the heater to be
-on for a longer period of time, but also be turned off for a longer periods of time, which is more energy efficnent
-then being turned on in bursts.
+on for a longer period of time, but also be turned off for a longer periods of time, which is more energy efficient
+than being turned on in bursts.
 
 If you're connected to HomeKit, you should be able to control your heater using Siri.
 
