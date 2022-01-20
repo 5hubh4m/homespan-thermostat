@@ -3,7 +3,7 @@
 // define the constants for the thermostat
 #define NAME         "Thermostat"
 #define MANUFACTURER "Shubham Chaudhary"
-#define MODEL        "HomeSpan Thermostat"
+#define MODEL        "Thermostat"
 #define SERIAL_NUM   "0x0000001"
 #define FIRMWARE     "v1.0.0"
 
@@ -18,6 +18,19 @@
 #if TEMP_PIN < 3 || TEMP_PIN > 10
 #error "Temperature sensor MUST be on ADC1 as ADC2 is occupied during Wi-Fi."
 #endif
+
+// threshold determines how sensitive
+// the heater is to the current temperature
+#define TEMP_THRESHOLD 0.5
+
+// number of readings to accumulate before averaging
+#define TEMP_READINGS 30
+
+// period to scan for state changes in milliseconds
+#define STATUS_PERIOD 2000
+
+// period to scan for temperature in milliseconds
+#define SENSE_PERIOD 50
 
 // uncomment these lines to define your own custom parameters
 // #define WIFI_SSID             "Your Wi-Fi SSID"
@@ -67,7 +80,7 @@ void setup() {
 #endif
 
   // start span device
-  homeSpan.begin(Category::Thermostats, NAME, NAME);
+  homeSpan.begin(Category::Thermostats, NAME, NAME, MODEL);
 
   // initialise span acessory
   accessory = new SpanAccessory();
@@ -82,11 +95,12 @@ void setup() {
   // right name, temperature sensor and heater
   // relay pin and in-built NeoPixel as a status LED
   thermostatService = new Thermostat(
-    NAME,
     TEMP_PIN,
     HEATER_PIN,
-    PIN_NEOPIXEL,
-    NEOPIXEL_POWER
+    TEMP_THRESHOLD,
+    TEMP_READINGS,
+    STATUS_PERIOD,
+    SENSE_PERIOD
   );
 
   // set the thermostat service as primary

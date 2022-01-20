@@ -18,12 +18,10 @@ private:
 
 public:
   // construct the NeoPixel object
-  NeoPixel(int neopixelPin, int powerPin = -1): pixel(1, neopixelPin, NEO_GRB + NEO_KHZ800) {
+  NeoPixel(): pixel(1, PIN_NEOPIXEL, NEO_GRB + NEO_KHZ800) {
     // turn on power to the NeoPixel LED
-    if (powerPin >= 0) {
-      pinMode(powerPin, OUTPUT);
-      digitalWrite(powerPin, HIGH);
-    }
+    pinMode(NEOPIXEL_POWER, OUTPUT);
+    digitalWrite(NEOPIXEL_POWER, HIGH);
 
     // start the NeoPixel library
     pixel.begin();
