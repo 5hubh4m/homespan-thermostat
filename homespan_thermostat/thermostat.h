@@ -56,6 +56,7 @@ private:
   SpanCharacteristic *coolingThresholdTemperature;
 
   // track the state of the thermostat
+  unsigned long lastUpdateTemperature;
   unsigned long lastSenseTemperature;
   unsigned long lastUpdateState;
   unsigned int tempReadings;
@@ -106,6 +107,7 @@ public:
     heatingThresholdTemperature->setRange(0, 25, 1);
 
     // setup the state of the thermostat
+    lastUpdateTemperature = millis();
     lastSenseTemperature = millis();
     lastUpdateState = millis();
     tempReadings = 0;
@@ -120,8 +122,12 @@ public:
       lastSenseTemperature = millis();
     }
 
-    // update current temperature when you have enough readings
-    updateCurrentTemp();
+    // update current temperature every given duration
+    // but only when when you have enough readings
+    if ((millis() - lastUpdateTemperature) > statusUpdatePeriod && tempReadings > minReadings) {
+      updateCurrentTemp();
+      lastUpdateTemperature = millis();
+    }
 
     // update state every given duration
     if ((millis() - lastUpdateState) > statusUpdatePeriod) {
@@ -149,7 +155,7 @@ private:
         toggle = heaterState;
         break;
       case HEAT:
-        toggle = toggleHeaterState(currentTemp, targetTemp - 1, targetTemp + 1, heaterState);
+        toggle = toggleHeaterState(currentTemp, targetTemp, targetTemp, heaterState);
         break;
       case AUTO:
       default:
@@ -195,19 +201,17 @@ private:
   // update the current temperature from accumulated readings
   // if enough reaadings have been accumulated so far
   void updateCurrentTemp() {
-    if (tempReadings > minReadings) {
-      double currentTemp = (tempSum / tempReadings) / 10.0;
-      currentTemperature->setVal(currentTemp);
-      tempReadings = 0;
-      tempSum = 0;
-    }
+    double currentTemp = (tempSum / tempReadings) / 10.0;
+    currentTemperature->setVal(currentTemp);
+    tempReadings = 0;
+    tempSum = 0;
   }
 
   // whether to toggle heater state
   bool toggleHeaterState(double currentTemp, double minTemp, double maxTemp, bool heaterState) {
     return (
-      (currentTemp < (minTemp - tempThreshold) && !heaterState) ||
-      (currentTemp > (maxTemp + tempThreshold) && heaterState)
+      (currentTemp < (minTemp + tempThreshold) && !heaterState) ||
+      (currentTemp > (maxTemp - tempThreshold) && heaterState)
     );
   }
 

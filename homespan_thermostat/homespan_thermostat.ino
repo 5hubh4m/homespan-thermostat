@@ -21,7 +21,7 @@
 
 // threshold determines how sensitive
 // the heater is to the current temperature
-#define TEMP_THRESHOLD 0.5
+#define TEMP_THRESHOLD 0.1
 
 // number of readings to accumulate before averaging
 #define TEMP_READINGS 30
@@ -40,14 +40,8 @@
 // #define DEFAULT_OTA_PASSWORD  "Custom OTA Password"
 
 // include the custom classes
-#include "include/identify.h"
-#include "include/thermostat.h"
-
-// declare the accessories and it's services
-static SpanAccessory* accessory;
-static SpanService* identifyService;
-static SpanService* protocolService;
-static SpanService* thermostatService;
+#include "identify.h"
+#include "thermostat.h"
 
 void setup() {
   // setup serial
@@ -83,28 +77,25 @@ void setup() {
   homeSpan.begin(Category::Thermostats, NAME, NAME, MODEL);
 
   // initialise span acessory
-  accessory = new SpanAccessory();
+  new SpanAccessory();
 
   // initialise accessory information service
-  identifyService = new Identify(NAME, MANUFACTURER, SERIAL_NUM, MODEL, FIRMWARE);
+  new Identify(NAME, MANUFACTURER, SERIAL_NUM, MODEL, FIRMWARE);
 
   // intialise the protocol identification service
-  protocolService = new ProtocolVersion();
+  new ProtocolVersion();
 
   // initialise thermostat service with the
   // right name, temperature sensor and heater
   // relay pin and in-built NeoPixel as a status LED
-  thermostatService = new Thermostat(
+  (new Thermostat(
     TEMP_PIN,
     HEATER_PIN,
     TEMP_THRESHOLD,
     TEMP_READINGS,
     STATUS_PERIOD,
     SENSE_PERIOD
-  );
-
-  // set the thermostat service as primary
-  thermostatService->setPrimary();
+  ))->setPrimary();
 }
 
 void loop() {
