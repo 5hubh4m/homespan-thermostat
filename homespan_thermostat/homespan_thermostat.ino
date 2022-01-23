@@ -23,11 +23,12 @@
 // the heater is to the current temperature
 #define TEMP_THRESHOLD 0.1
 
-// number of readings to accumulate before averaging
-#define TEMP_READINGS 30
+// alpha for exponential averaging of
+// temperature readings, more is smoother
+#define TEMP_EXP_ALPHA 0.9
 
 // period to scan for state changes in milliseconds
-#define STATUS_PERIOD 2000
+#define STATUS_PERIOD 5000
 
 // period to scan for temperature in milliseconds
 #define SENSE_PERIOD 50
@@ -91,8 +92,8 @@ void setup() {
   (new Thermostat(
     TEMP_PIN,
     HEATER_PIN,
+    TEMP_EXP_ALPHA,
     TEMP_THRESHOLD,
-    TEMP_READINGS,
     STATUS_PERIOD,
     SENSE_PERIOD
   ))->setPrimary();

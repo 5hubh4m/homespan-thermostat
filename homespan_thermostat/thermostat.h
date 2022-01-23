@@ -1,14 +1,14 @@
 #include <HomeSpan.h>
 
 #include "relay.h"
+#include "sensor.h"
 #include "neopixel.h"
-#include "temperature.h"
 
 // enums to define some constants
 enum TargetHeaterStates {
   OFF = 0,
   HEAT = 1,
-  COOL = 2, // we disable this state since we don't have a AC
+  COOL = 2, // we disable this state since we don't have an AC
   AUTO = 3
 };
 
@@ -20,7 +20,24 @@ enum CurrentHeaterStates {
 
 enum TemperatureDisplayUnits {
   CELSIUS = 0,
-  FARHENITE = 1 // we disable this state since we are not heathens
+  FAHRENHEIT = 1 // we disable this state since we are not heathens
+};
+
+// class ties the heater relay operation to a characteristic
+class CurrentHeaterStatus: public Characteristic::CurrentHeatingCoolingState {
+private:
+  // heater relay
+  Relay heater;
+
+public:
+  // constructor for the class
+  CurrentHeaterStatus(int heaterPin): Characteristic::CurrentHeatingCoolingState(IDLE), heater(heaterPin) {}
+
+  template <typename T>
+  void setVal(T value, bool notify = true) {
+    heater.setState(value);
+    Characteristic::CurrentHeatingCoolingState::setVal(value, notify);
+  }
 };
 
 // the class that contains the logic for running the
@@ -30,16 +47,14 @@ private:
   // setup the sensor, heater relay, and status LED
   TemperatureSensor sensor;
   NeoPixel status;
-  Relay heater;
 
   // temperature threshold, determines the degree
   // to which heater state change is sensitive to
   // current temperature
-  const double tempThreshold;
+  const float tempThreshold;
 
-  // this is the minimum number of temperature
-  // readings to accumulate before calculating
-  const unsigned int minReadings;
+  // alpha for exponential averaging temperature
+  const float tempExpAlpha;
 
   // period in milliseconds before the state is
   // updated and temperature is sensed respectively
@@ -47,11 +62,11 @@ private:
   const unsigned long temperatureSensePeriod;
 
   // setup the characteristic objects
-  SpanCharacteristic *temperatureDisplayUnits;
-  SpanCharacteristic *currentTemperature;
-  SpanCharacteristic *currentHeaterState;
+  CurrentHeaterStatus *currentHeaterState;
   SpanCharacteristic *targetHeaterState;
   SpanCharacteristic *targetTemperature;
+  SpanCharacteristic *currentTemperature;
+  SpanCharacteristic *temperatureDisplayUnits;
   SpanCharacteristic *heatingThresholdTemperature;
   SpanCharacteristic *coolingThresholdTemperature;
 
@@ -59,35 +74,33 @@ private:
   unsigned long lastUpdateTemperature;
   unsigned long lastSenseTemperature;
   unsigned long lastUpdateState;
-  unsigned int tempReadings;
-  long tempSum;
+  float currentExpAvgTemp;
 
 public:
   // constructor for the thermostat
   Thermostat(
-    int tempPin,
-    int heaterPin,
-    double threshold,
-    unsigned int accumulate,
+    int temp,
+    int heater,
+    float alpha,
+    float threshold,
     unsigned long statePeriod,
     unsigned long sensePeriod
   ):
-    sensor(tempPin),
-    heater(heaterPin),
-    minReadings(accumulate),
+    sensor(temp),
+    tempExpAlpha(alpha),
     tempThreshold(threshold),
     statusUpdatePeriod(statePeriod),
     temperatureSensePeriod(sensePeriod)
   {
-    // get an initial reading for the current temperature
-    double currentTemp = sensor.readTemp() / 10.0;
+    // get an initial reading for current temperature
+    currentExpAvgTemp = sensor.readTemp();
 
     // initialise the status to default
     status.setColor(WHITE);
 
     // initialise the characteristics
-    currentHeaterState = new Characteristic::CurrentHeatingCoolingState(IDLE);
-    currentTemperature = new Characteristic::CurrentTemperature(currentTemp);
+    currentHeaterState = new CurrentHeaterStatus(heater);
+    currentTemperature = new Characteristic::CurrentTemperature(currentExpAvgTemp);
     targetHeaterState = new Characteristic::TargetHeatingCoolingState(OFF, true);
     targetTemperature = new Characteristic::TargetTemperature(20, true);
     temperatureDisplayUnits = new Characteristic::TemperatureDisplayUnits(CELSIUS);
@@ -110,21 +123,19 @@ public:
     lastUpdateTemperature = millis();
     lastSenseTemperature = millis();
     lastUpdateState = millis();
-    tempReadings = 0;
-    tempSum = 0;
   }
 
   // update the state of the thermostat
   void loop() {
     // sense temperature every given duration
     if ((millis() - lastSenseTemperature) > temperatureSensePeriod) {
-      updateTempReadings();
+      updateTempReading();
       lastSenseTemperature = millis();
     }
 
     // update current temperature every given duration
     // but only when when you have enough readings
-    if ((millis() - lastUpdateTemperature) > statusUpdatePeriod && tempReadings > minReadings) {
+    if ((millis() - lastUpdateTemperature) > statusUpdatePeriod) {
       updateCurrentTemp();
       lastUpdateTemperature = millis();
     }
@@ -142,10 +153,10 @@ private:
     // get the current state of the system
     int targetState = targetHeaterState->getVal();
     bool heaterState = currentHeaterState->getVal();
-    double targetTemp = targetTemperature->getVal<double>(),
-           currentTemp = currentTemperature->getVal<double>(),
-           minTemp = heatingThresholdTemperature->getVal<double>(),
-           maxTemp = coolingThresholdTemperature->getVal<double>();
+    float currentTemp = currentExpAvgTemp,
+          targetTemp = targetTemperature->getVal<float>(),
+          minTemp = heatingThresholdTemperature->getVal<float>(),
+          maxTemp = coolingThresholdTemperature->getVal<float>();
 
     // decide whether to changed the state of the heater
     // based on currently set config
@@ -182,33 +193,23 @@ private:
     status.setColor(color);
     if (toggle) {
       currentHeaterState->setVal(!heaterState);
-      heater.setState(!heaterState);
     }
   }
 
   // accumulate a new temperature reading
-  void updateTempReadings() {
-    // read the current temperature
-    int reading = sensor.readTemp();
-
-    // only accumulate if the reading is valid
-    if (reading >= -10 * 10 && reading <= 30 * 10) {
-      tempReadings += 1;
-      tempSum += reading;
-    }
+  // using exponential averaging
+  void updateTempReading() {
+    currentExpAvgTemp *= tempExpAlpha;
+    currentExpAvgTemp += (1 - tempExpAlpha) * sensor.readTemp();
   }
 
   // update the current temperature from accumulated readings
-  // if enough reaadings have been accumulated so far
   void updateCurrentTemp() {
-    double currentTemp = (tempSum / tempReadings) / 10.0;
-    currentTemperature->setVal(currentTemp);
-    tempReadings = 0;
-    tempSum = 0;
+    currentTemperature->setVal(currentExpAvgTemp);
   }
 
   // whether to toggle heater state
-  bool toggleHeaterState(double currentTemp, double minTemp, double maxTemp, bool heaterState) {
+  bool toggleHeaterState(float currentTemp, float minTemp, float maxTemp, bool heaterState) {
     return (
       (currentTemp < (minTemp + tempThreshold) && !heaterState) ||
       (currentTemp > (maxTemp - tempThreshold) && heaterState)
@@ -216,10 +217,10 @@ private:
   }
 
   // return the color of the status LED
-  color_t statusColor(double currentTemp, double minTemp, double maxTemp) {
-    if (currentTemp < (minTemp - tempThreshold)) {
+  color_t statusColor(float currentTemp, float minTemp, float maxTemp) {
+    if (currentTemp < (minTemp + tempThreshold)) {
       return BLUE;
-    } else if (currentTemp > (maxTemp + tempThreshold)) {
+    } else if (currentTemp > (maxTemp - tempThreshold)) {
       return RED;
     } else {
       return GREEN;
