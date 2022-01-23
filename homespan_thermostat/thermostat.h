@@ -75,6 +75,7 @@ private:
   unsigned long lastSenseTemperature;
   unsigned long lastUpdateState;
   float currentExpAvgTemp;
+  bool wasUpdated;
 
 public:
   // constructor for the thermostat
@@ -123,10 +124,22 @@ public:
     lastUpdateTemperature = millis();
     lastSenseTemperature = millis();
     lastUpdateState = millis();
+    wasUpdated = false;
+  }
+
+  // mark the state to be updated
+  // so the next time loop runs it 
+  // doesn't wait for timer period
+  virtual bool update() override {
+    wasUpdated = targetHeaterState->updated() ||
+                 targetTemperature->updated() ||
+                 coolingThresholdTemperature->updated() ||
+                 heatingThresholdTemperature->updated();
+    return true;
   }
 
   // update the state of the thermostat
-  void loop() {
+  virtual void loop() override {
     // sense temperature every given duration
     if ((millis() - lastSenseTemperature) > temperatureSensePeriod) {
       updateTempReading();
@@ -141,8 +154,9 @@ public:
     }
 
     // update state every given duration
-    if ((millis() - lastUpdateState) > statusUpdatePeriod) {
+    if ((millis() - lastUpdateState) > statusUpdatePeriod || wasUpdated) {
       updateState();
+      wasUpdated = false;
       lastUpdateState = millis();
     }
   }
@@ -199,8 +213,15 @@ private:
   // accumulate a new temperature reading
   // using exponential averaging
   void updateTempReading() {
-    currentExpAvgTemp *= tempExpAlpha;
-    currentExpAvgTemp += (1 - tempExpAlpha) * sensor.readTemp();
+    // read the current temperature
+    float reading = sensor.readTemp();
+
+    // validate for correct seaming reading
+    // and accumulate if so
+    if (-10 <= reading && reading <= 40) {
+      currentExpAvgTemp *= tempExpAlpha;
+      currentExpAvgTemp += (1 - tempExpAlpha) * reading;
+    }
   }
 
   // update the current temperature from accumulated readings

@@ -25,7 +25,7 @@
 
 // alpha for exponential averaging of
 // temperature readings, more is smoother
-#define TEMP_EXP_ALPHA 0.9
+#define TEMP_EXP_ALPHA 0.99
 
 // period to scan for state changes in milliseconds
 #define STATUS_PERIOD 5000
